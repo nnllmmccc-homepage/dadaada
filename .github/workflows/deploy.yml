@@ -1,4 +1,4 @@
-name: Deploy to Surge
+name: Deploy to Netlify
 
 on:
   push:
@@ -13,21 +13,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v2.0
         with:
-          node-version: '18'
-      
-      - name: Install Surge
-        run: npm install --global surge
-      
-      - name: Create Surge credentials
-        run: |
-          echo ${{ secrets.SURGE_LOGIN }} > ~/.netrc
-          echo ${{ secrets.SURGE_PASSWORD }} >> ~/.netrc
-      
-      - name: Deploy to Surge
-        run: surge ./ ${{ secrets.SURGE_DOMAIN }}
+          publish-dir: './'
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from GitHub Actions"
         env:
-          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
-          SURGE_TOKEN: ${{ secrets.SURGE_PASSWORD }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
