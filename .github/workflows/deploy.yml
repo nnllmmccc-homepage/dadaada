@@ -11,16 +11,23 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '18'
       
-      - name: Install and Deploy with Surge
+      - name: Install Surge
+        run: npm install --global surge
+      
+      - name: Create Surge credentials
         run: |
-          npm install -g surge
-          surge ./ ${{ secrets.SURGE_DOMAIN }} --token ${{ secrets.SURGE_TOKEN }}
+          echo ${{ secrets.SURGE_LOGIN }} > ~/.netrc
+          echo ${{ secrets.SURGE_PASSWORD }} >> ~/.netrc
+      
+      - name: Deploy to Surge
+        run: surge ./ ${{ secrets.SURGE_DOMAIN }}
         env:
-          SURGE_LOGIN: ${{ secrets.SURGE_EMAIL }}
+          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
+          SURGE_TOKEN: ${{ secrets.SURGE_PASSWORD }}
