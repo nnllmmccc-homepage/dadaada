@@ -1,33 +1,31 @@
-name: Deploy to Surge
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
       - main
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
         with:
-          node-version: '18'
+          path: '.'
       
-      - name: Install Surge
-        run: npm install --global surge
-      
-      - name: Create Surge credentials
-        run: |
-          echo ${{ secrets.SURGE_LOGIN }} > ~/.netrc
-          echo ${{ secrets.SURGE_PASSWORD }} >> ~/.netrc
-      
-      - name: Deploy to Surge
-        run: surge ./ ${{ secrets.SURGE_DOMAIN }}
-        env:
-          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
-          SURGE_TOKEN: ${{ secrets.SURGE_PASSWORD }}
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
