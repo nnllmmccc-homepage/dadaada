@@ -1,27 +1,57 @@
-name: Deploy to Surge
+name: Run Discord Bot
 
+# ===========================
+# トリガー
+# ===========================
 on:
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: "0 */4 * * *"  # 4時間ごとに自動実行（UTC）
+  workflow_dispatch:        # 手動実行も可能
 
+# ===========================
+# 重複防止
+# ===========================
+concurrency:
+  group: discord-bot
+  cancel-in-progress: true  # 古いジョブが残っていれば停止してから新しいジョブ開始
+
+# ===========================
+# ジョブ定義
+# ===========================
 jobs:
-  deploy:
+  run-bot:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout code
+      # 1. リポジトリをチェックアウト
+      - name: リポジトリをチェックアウト
         uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+
+      # 2. Pythonセットアップ
+      - name: Pythonセットアップ
+        uses: actions/setup-python@v5
         with:
-          node-version: '20'
-      
-      - name: Install and Deploy with Surge
+          python-version: "3.11"
+
+      # 3. pip キャッシュと依存ライブラリインストール
+      - name: 依存ライブラリをキャッシュ＆インストール
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: 依存ライブラリインストール
         run: |
-          npm install -g surge
-          surge ./ ${{ secrets.SURGE_DOMAIN }} --token ${{ secrets.SURGE_TOKEN }}
-        env:
-          SURGE_LOGIN: ${{ secrets.SURGE_EMAIL }}
-        
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install discord.py asyncio
+          fi
+
+      # 4. Discord Bot起動
+      - name: Discord Bot起動
+        run: |
+          echo "✅ Bot starting..."
+          python main.py
